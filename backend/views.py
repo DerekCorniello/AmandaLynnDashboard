@@ -56,7 +56,7 @@ class ProductCreate(View):
             data = json.loads(request.body)
             valid_products = Product.objects.values_list('name', flat=True)
             if data['name'] in valid_products:
-                return JsonResponse({'error': f'Product already exists: {data['name']}'}, status=400)
+                return JsonResponse({'error': f'Product already exists: {data["name"]}'}, status=400)
 
             product = Product.objects.create(
                 name=data['name'],
@@ -84,7 +84,7 @@ class ProductUpdate(View):
             product = Product.objects.get(pk=pk)
             valid_products = Product.objects.values_list('name', flat=True)
             if data['name'] in valid_products and data['name'] != product.name:
-                return JsonResponse({'error': f'Product already exists: {data['name']}'}, status=400)
+                return JsonResponse({'error': f'Product already exists: {data["name"]}'}, status=400)
 
             for field in ['name', 'stock', 'price', 'number_sold']:
                 if field in data:
