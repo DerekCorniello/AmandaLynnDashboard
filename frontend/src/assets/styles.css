@@ -8,11 +8,6 @@ html, body {
   height: 100vh;
 }
 
-.main {
-  flex: 1 1 auto;
-  overflow-y: auto;
-}
-
 /* Header styling */
 h1, h2 {
   color: #c8a2c8; /* Soft lavender for headers */

@@ -62,18 +62,12 @@ export default {
 </script>
 
 <style scoped>
-.app {
+#app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-}
-
-header, footer {
-  flex-shrink: 0;
-}
-
-.content {
-  flex-grow: 1;
-  overflow-y: auto;
+  justify-content: center;
+  align-items: center;
+  height: 80%;
+  text-align: center;
 }
 </style>
