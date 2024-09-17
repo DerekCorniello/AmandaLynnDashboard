@@ -5,7 +5,12 @@ html, body {
   color: #d0bfe3; /* Light lavender for text */
   margin: 0px;
   padding: 0px;
-  height: 100%;
+  height: 100vh;
+}
+
+.main {
+  flex: 1 1 auto;
+  overflow-y: auto;
 }
 
 /* Header styling */

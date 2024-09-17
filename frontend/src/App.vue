@@ -6,6 +6,7 @@
     <DataTable />
     <br> <br> <br> <hr> <br> <br>
     <EnterData />
+  <br> <br> <br> <br>
   </div>
   <br> <br> <br> <br>
 </template>
@@ -61,13 +62,18 @@ export default {
 </script>
 
 <style scoped>
-
-#app {
+.app {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   height: 100vh;
-  text-align: center;
+}
+
+header, footer {
+  flex-shrink: 0;
+}
+
+.content {
+  flex-grow: 1;
+  overflow-y: auto;
 }
 </style>
