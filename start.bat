@@ -10,3 +10,4 @@ if %errorlevel% neq 0 (
 
 echo Starting Docker Compose services...
 docker-compose up --build --remove-orphans
+pause
