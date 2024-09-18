@@ -4,8 +4,8 @@
     <ErrorMessage :message="errorMessage" />
     <br>
     <DataTable />
-    <br> <br> <br> <hr> <br> <br>
-    <EnterData />
+    <br> <br> <br> <br> <br>
+    <EnterData @data-updated="handleDataUpdated"/>
   <br> <br> <br> <br>
   </div>
   <br> <br> <br> <br>
@@ -30,11 +30,14 @@ export default {
     }
   },
   methods: {
+    handleDataUpdated (table) {
+      this.$refs.dataTable.fetchData()
+    },
     setError (message) {
       this.errorMessage = message
       setTimeout(() => {
         this.errorMessage = ''
-      }, 10000) // Clear the message after 5 seconds
+      }, 10000) // Clear the message after 10 seconds
     },
     setupGlobalErrorHandling () {
       // Intercept HTTP errors globally

@@ -73,7 +73,7 @@ export default {
       currentEditId: null,
       editItemData: {},
       searchQuery: '',
-      sortField: 'name',
+      sortField: 'name' | 'type',
       sortOrder: 'asc'
     }
   },
@@ -94,16 +94,19 @@ export default {
           endpoint = 'http://127.0.0.1:8000/api/products/'
           headers = ['name', 'stock', 'price', 'number_sold']
           this.tableTitle = 'Product List'
+          this.sortField = this.sortField === 'type' ? 'name' : this.sortField
           break
         case 'expenses':
           endpoint = 'http://127.0.0.1:8000/api/expenses/'
           headers = ['name', 'date', 'type', 'price']
           this.tableTitle = 'Expense List'
+          this.sortField = this.sortField === 'type' ? 'name' : this.sortField
           break
         case 'transactions':
           endpoint = 'http://127.0.0.1:8000/api/transactions/'
           headers = ['total', 'date', 'type', 'products']
           this.tableTitle = 'Transaction List'
+          this.sortField = 'type'
           break
         default:
           return

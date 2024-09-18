@@ -203,10 +203,9 @@ class TransactionList(View):
 
             transaction_data = []
             for transaction in transactions:
-
                 product_names = transaction.products
-                print(product_names)
-                print(type(product_names))
+                if product_names.startswith('[') and product_names.endswith(']'):
+                    product_names = product_names[1:-1].replace("'", "")
 
                 transaction_data.append({
                     'id': transaction.id,

@@ -121,9 +121,10 @@ export default {
 
       try {
         await axios.post(endpoint, data)
-        // Optionally, you can add code here to refresh the table data or give feedback to the user
         this.resetForm() // Clear the form
-        window.location.reload()
+
+        // Emit an event or call a method to update the chart/table data
+        this.$emit('data-updated', this.selectedTable) // Emitting an event to parent component
       } catch (error) {
         console.error('Error adding entry:', error)
       }
