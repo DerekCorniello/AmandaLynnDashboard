@@ -32,12 +32,15 @@ def apply_sorting_and_filtering(queryset, request, allowed_sort_fields):
 
 class ProductList(View):
     def get(self, request):
-        products = Product.objects.all()
-        allowed_sort_fields = ['name', 'price', 'stock', 'number_sold']
-        products = apply_sorting_and_filtering(
-            products, request, allowed_sort_fields)
-        products = list(products.values())
-        return JsonResponse(products, safe=False)
+        try:
+            products = Product.objects.all()
+            allowed_sort_fields = ['name', 'price', 'stock', 'number_sold']
+            products = apply_sorting_and_filtering(
+                products, request, allowed_sort_fields)
+            products = list(products.values())
+            return JsonResponse(products, safe=False)
+        except Exception as e:
+            print(e)
 
 
 class ProductDelete(View):
@@ -48,6 +51,8 @@ class ProductDelete(View):
             return JsonResponse({'status': 'success'}, status=204)
         except Product.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
+        except Exception as e:
+            print(e)
 
 
 class ProductCreate(View):
@@ -55,8 +60,10 @@ class ProductCreate(View):
         try:
             data = json.loads(request.body)
             valid_products = Product.objects.values_list('name', flat=True)
-            if data['name'] in valid_products:
+            if data['name'].lower() in [p.lower() for p in valid_products]:
                 return JsonResponse({'error': f'Product already exists: {data["name"]}'}, status=400)
+            if data['name'].lower() == 'unknown':
+                return JsonResponse({'error': 'Cannot create Unknown Product'}, status=400)
 
             product = Product.objects.create(
                 name=data['name'],
@@ -75,6 +82,8 @@ class ProductCreate(View):
             return JsonResponse({'error': f'Missing field: {str(e)}'}, status=400)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(e)
 
 
 class ProductUpdate(View):
@@ -83,8 +92,11 @@ class ProductUpdate(View):
             data = json.loads(request.body)
             product = Product.objects.get(pk=pk)
             valid_products = Product.objects.values_list('name', flat=True)
-            if data['name'] in valid_products and data['name'] != product.name:
+
+            if data['name'].lower() in [p.lower() for p in valid_products] and data['name'].lower() != product.name.lower():
                 return JsonResponse({'error': f'Product already exists: {data["name"]}'}, status=400)
+            if data['name'].lower() == 'unknown':
+                return JsonResponse({'error': 'Cannot create Unknown Product'}, status=400)
 
             for field in ['name', 'stock', 'price', 'number_sold']:
                 if field in data:
@@ -102,16 +114,21 @@ class ProductUpdate(View):
             return JsonResponse({'error': 'Not found'}, status=404)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(e)
 
 
 class ExpenseList(View):
     def get(self, request):
-        expenses = Expense.objects.all()
-        allowed_sort_fields = ['name', 'date', 'price', 'type']
-        expenses = apply_sorting_and_filtering(
-            expenses, request, allowed_sort_fields)
-        expenses = list(expenses.values())
-        return JsonResponse(expenses, safe=False)
+        try:
+            expenses = Expense.objects.all()
+            allowed_sort_fields = ['name', 'date', 'price', 'type']
+            expenses = apply_sorting_and_filtering(
+                expenses, request, allowed_sort_fields)
+            expenses = list(expenses.values())
+            return JsonResponse(expenses, safe=False)
+        except Exception as e:
+            print(e)
 
 
 class ExpenseDelete(View):
@@ -122,6 +139,8 @@ class ExpenseDelete(View):
             return JsonResponse({'status': 'success'}, status=204)
         except Expense.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
+        except Exception as e:
+            print(e)
 
 
 class ExpenseCreate(View):
@@ -145,6 +164,8 @@ class ExpenseCreate(View):
             return JsonResponse({'error': f'Missing field: {str(e)}'}, status=400)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(e)
 
 
 class ExpenseUpdate(View):
@@ -168,29 +189,36 @@ class ExpenseUpdate(View):
             return JsonResponse({'error': 'Not found'}, status=404)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(e)
 
 
 class TransactionList(View):
     def get(self, request):
-        transactions = Transaction.objects.all()
-        allowed_sort_fields = ['date', 'total', 'type']
-        transactions = apply_sorting_and_filtering(
-            transactions, request, allowed_sort_fields)
+        try:
+            transactions = Transaction.objects.all()
+            allowed_sort_fields = ['date', 'total', 'type']
+            transactions = apply_sorting_and_filtering(
+                transactions, request, allowed_sort_fields)
 
-        transaction_data = []
-        for transaction in transactions:
+            transaction_data = []
+            for transaction in transactions:
 
-            product_names = transaction.products
+                product_names = transaction.products
+                print(product_names)
+                print(type(product_names))
 
-            transaction_data.append({
-                'id': transaction.id,
-                'total': transaction.total,
-                'date': transaction.date,
-                'type': transaction.type,
-                'products': product_names
-            })
+                transaction_data.append({
+                    'id': transaction.id,
+                    'total': transaction.total,
+                    'date': transaction.date,
+                    'type': transaction.type,
+                    'products': ', '.join([p.strip() for p in product_names.split(',')])
+                })
 
-        return JsonResponse(transaction_data, safe=False)
+            return JsonResponse(transaction_data, safe=False)
+        except Exception as e:
+            print(e)
 
 
 class TransactionDelete(View):
@@ -201,6 +229,8 @@ class TransactionDelete(View):
             return JsonResponse({'status': 'success'}, status=204)
         except Transaction.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
+        except Exception as e:
+            print(e)
 
 
 class TransactionCreate(View):
@@ -211,12 +241,10 @@ class TransactionCreate(View):
             product_names_str = data.get('products', '')
 
             product_names_list = [product.strip()
-                                  for product in product_names_str.split(',')]
-
+                                  for product in product_names_str]
             valid_products = Product.objects.values_list('name', flat=True)
-
             for product in product_names_list:
-                if product not in valid_products:
+                if product.lower() not in [p.lower() for p in valid_products] and product.lower() != 'unknown':
                     return JsonResponse({'error': f'Product does not exist: {product}'}, status=400)
 
             transaction = Transaction.objects.create(
@@ -240,6 +268,8 @@ class TransactionCreate(View):
             return JsonResponse({'error': f'Missing field: {str(e)}'}, status=400)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(e)
 
 
 class TransactionUpdate(View):
@@ -260,7 +290,7 @@ class TransactionUpdate(View):
             valid_products = Product.objects.values_list('name', flat=True)
 
             for product in product_names_list:
-                if product not in valid_products:
+                if product.lower() not in [p.lower() for p in valid_products] and product.lower() != 'unknown':
                     return JsonResponse({'error': f'Product does not exist: {product}'}, status=400)
 
             transaction.products = product_names_str
@@ -278,3 +308,5 @@ class TransactionUpdate(View):
             return JsonResponse({'error': 'Not found'}, status=404)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            print(e)
