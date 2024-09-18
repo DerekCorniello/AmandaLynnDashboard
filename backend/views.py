@@ -109,7 +109,7 @@ class ProductUpdate(View):
                 'stock': product.stock,
                 'price': product.price,
                 'number_sold': product.number_sold
-            })
+            }, status=204)
         except Product.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except json.JSONDecodeError:
@@ -184,7 +184,7 @@ class ExpenseUpdate(View):
                 'name': expense.name,
                 'type': expense.type,
                 'price': expense.price,
-            })
+            }, status=204)
         except Expense.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except json.JSONDecodeError:
@@ -301,7 +301,7 @@ class TransactionUpdate(View):
                 'date': transaction.date,
                 'type': transaction.type,
                 'products': product_names_str
-            })
+            }, status=205)
 
         except Transaction.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)

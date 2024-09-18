@@ -97,3 +97,12 @@ td {
   border-radius: 5px;
   background-color: #4b2e36; /* Darker red background for error */
 }
+
+/* Success message styling */
+.success-message {
+  color: #d4edda; /* Green for success text */
+  padding: 10px;
+  border: 1px solid #d4edda;
+  border-radius: 5px;
+  background-color: #155724; /* Darker green background for success */
+}

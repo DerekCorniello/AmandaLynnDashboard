@@ -80,7 +80,21 @@ export default {
   methods: {
     handleTableChange () {
       this.isEditing = false
+      this.updateSortField()
       this.fetchData()
+    },
+    updateSortField () {
+      switch (this.selectedTable) {
+        case 'products':
+          this.sortField = 'name'
+          break
+        case 'expenses':
+          this.sortField = 'type'
+          break
+        case 'transactions':
+          this.sortField = 'type'
+          break
+      }
     },
     handleSearch () {
       this.fetchData()
@@ -94,19 +108,19 @@ export default {
           endpoint = 'http://127.0.0.1:8000/api/products/'
           headers = ['name', 'stock', 'price', 'number_sold']
           this.tableTitle = 'Product List'
-          this.sortField = this.sortField === 'type' ? 'name' : this.sortField
+          this.sortField = this.sortField || 'name'
           break
         case 'expenses':
           endpoint = 'http://127.0.0.1:8000/api/expenses/'
           headers = ['name', 'date', 'type', 'price']
           this.tableTitle = 'Expense List'
-          this.sortField = this.sortField === 'type' ? 'name' : this.sortField
+          this.sortField = this.sortField || 'name'
           break
         case 'transactions':
           endpoint = 'http://127.0.0.1:8000/api/transactions/'
           headers = ['total', 'date', 'type', 'products']
           this.tableTitle = 'Transaction List'
-          this.sortField = 'type'
+          this.sortField = this.sortField || 'type'
           break
         default:
           return
@@ -166,6 +180,7 @@ export default {
     }
   },
   created () {
+    this.updateSortField()
     this.fetchData()
   },
   watch: {
