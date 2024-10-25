@@ -8,6 +8,10 @@
     <br><br><br><br><br>
     <EnterData @data-updated="handleDataUpdated" />
     <br><br><br><br>
+    <!--<MoneyGraph />
+    <br><br><br><br>
+    <ProductGraph />
+    <br><br><br><br> -->
   </div>
   <br><br><br><br>
 </template>
@@ -18,6 +22,8 @@ import DataTable from './components/DataTable.vue'
 import EnterData from './components/EnterData.vue'
 import ErrorMessage from './components/ErrorMessage.vue'
 import SuccessMessage from './components/SuccessMessage.vue'
+// import MoneyGraph from './components/MoneyGraph.vue'
+// import ProductGraph from './components/ProductGraph.vue'
 
 export default {
   name: 'App',
@@ -25,7 +31,9 @@ export default {
     DataTable,
     EnterData,
     ErrorMessage,
-    SuccessMessage
+    SuccessMessage // ,
+    // MoneyGraph,
+    // ProductGraph
   },
   data () {
     return {
@@ -34,20 +42,20 @@ export default {
     }
   },
   methods: {
-    handleDataUpdated (table) {
+    handleDataUpdated () {
       this.$refs.dataTable.fetchData()
     },
     setError (message) {
       this.errorMessage = message
       setTimeout(() => {
         this.errorMessage = ''
-      }, 10000) // Clear the message after 10 seconds
+      }, 10000)
     },
     setSuccess (message) {
       this.successMessage = message
       setTimeout(() => {
         this.successMessage = ''
-      }, 10000) // Clear the message after 10 seconds
+      }, 10000)
     },
     setupGlobalErrorHandling () {
       // Intercept HTTP responses globally

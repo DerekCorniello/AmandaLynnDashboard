@@ -162,7 +162,10 @@ export default {
     editItem (item) {
       this.isEditing = true
       this.currentEditId = item.id
-      this.editItemData = { ...item }
+      this.editItemData = {}
+      this.tableHeaders.forEach(header => {
+        this.editItemData[header] = item[header] !== undefined ? item[header] : 'N/A'
+      })
     },
     async saveEdit () {
       try {

@@ -1,7 +1,10 @@
 from django.http import JsonResponse
 from django.views import View
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.db.models.functions import TruncDate
 from .models import Product, Expense, Transaction
+from collections import defaultdict
+from datetime import datetime
 import json
 
 
@@ -28,6 +31,116 @@ def apply_sorting_and_filtering(queryset, request, allowed_sort_fields):
         queryset = queryset.order_by(sort_by)
 
     return queryset
+
+
+class GraphData(View):
+    def _get_money_data(self, timescale):
+        today = datetime.now()
+        match timescale:
+            case 'week':
+                start_date = today - datetime.timedelta(days=7)
+            case 'month':
+                start_date = today - datetime.timedelta(days=30)
+            case '3month':
+                start_date = today - datetime.timedelta(days=90)
+            case '6month':
+                start_date = today - datetime.timedelta(days=180)
+            case 'year':
+                start_date = today - datetime.timedelta(days=365)
+            case 'all':
+                start_date = datetime.min
+            case _:
+                return JsonResponse(
+                        {'error': 'Invalid time scale'},
+                        status=400)
+
+
+        # Fetch data from Expense model and group by date
+        expenses_query = (
+            Expense.objects
+            .filter(date__gte=start_date)
+            .annotate(date=TruncDate('date'))
+            .values('date')
+            .annotate(total_expense=Sum('price'))
+            .values('date', 'total_expense')
+        )
+
+        expenses = list(expenses_query)
+
+
+        # Fetch data from Transaction model and group by date
+        transactions_query = (
+            Transaction.objects
+            .filter(date__gte=start_date)
+            .annotate(date=TruncDate('date'))
+            .values('date')
+            .annotate(total_income=Sum('total'))
+            .values('date', 'total_income')
+        )
+
+        transactions = list(transactions_query)
+
+        # Aggregate daily data into dictionaries
+        daily_expenses = defaultdict(float)
+        daily_income = defaultdict(float)
+
+        for expense in expenses:
+            daily_expenses[expense['date']] = expense['total_expense']
+
+        for transaction in transactions:
+            daily_income[transaction['date']] = transaction['total_income']
+
+        # Prepare data for chart
+        dates = sorted(
+            set(daily_expenses.keys()).union(daily_income.keys()))
+        expense_data = [daily_expenses.get(date, 0) for date in dates]
+        income_data = [daily_income.get(date, 0) for date in dates]
+        revenue_data = [income - expense for income,
+                        expense in zip(income_data, expense_data)]
+
+        return {
+            'labels': dates,
+            'datasets': [
+                {
+                    'label': 'Total Income',
+                    'data': income_data,
+                    'borderColor': '#42A5F5',
+                    'backgroundColor': 'rgba(66, 165, 245, 0.2)'
+                },
+                {
+                    'label': 'Total Spending',
+                    'data': expense_data,
+                    'borderColor': '#66BB6A',
+                    'backgroundColor': 'rgba(102, 187, 106, 0.2)'
+                },
+                {
+                    'label': 'Revenue',
+                    'data': revenue_data,
+                    'borderColor': '#FF7043',
+                    'backgroundColor': 'rgba(255, 112, 67, 0.2)'
+                }
+            ]
+        }
+
+    def _get_product_data(self, timescale):
+        return
+
+    def get(self, request):
+        try:
+            data = json.loads(request.body)
+            if data['graph'] == 'money':
+                res = self._get_money_data(data['timescale'])
+            elif data['graph'] == 'product':
+                res = self._get_product_data(data['timescale'])
+            else:
+                res = None
+                raise KeyError
+            return JsonResponse(res, safe=False)
+        except KeyError as e:
+            print(e)
+            return JsonResponse({'error': f'Graph requested `{data["graph"]}` is not available'}, status=404)
+        except Exception as e:
+            print(e)
 
 
 class ProductList(View):
@@ -109,7 +222,7 @@ class ProductUpdate(View):
                 'stock': product.stock,
                 'price': product.price,
                 'number_sold': product.number_sold
-            }, status=204)
+            }, status=205)
         except Product.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except json.JSONDecodeError:
@@ -184,7 +297,7 @@ class ExpenseUpdate(View):
                 'name': expense.name,
                 'type': expense.type,
                 'price': expense.price,
-            }, status=204)
+            }, status=205)
         except Expense.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except json.JSONDecodeError:

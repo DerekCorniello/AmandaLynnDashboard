@@ -4,6 +4,7 @@ from .views import (
     ProductList, ProductDelete, ProductCreate, ProductUpdate,
     ExpenseList, ExpenseDelete, ExpenseCreate, ExpenseUpdate,
     TransactionList, TransactionDelete, TransactionCreate, TransactionUpdate,
+    GraphData,
 )
 
 urlpatterns = [
@@ -20,7 +21,7 @@ urlpatterns = [
     path('expenses/create/', ExpenseCreate.as_view(), name='expense-create'),
     path('expenses/delete/<int:pk>/',
          ExpenseDelete.as_view(), name='expense-delete'),
-    path('products/update/<int:pk>/',
+    path('expenses/update/<int:pk>/',
          ExpenseUpdate.as_view(), name='expense-update'),
 
     # Transaction URLs
@@ -31,4 +32,5 @@ urlpatterns = [
          TransactionDelete.as_view(), name='transaction-delete'),
     path('transactions/update/<int:pk>/',
          TransactionUpdate.as_view(), name='transaction-update'),
+    path('graphdata/', GraphData.as_view(), name='graph-list')
 ]
