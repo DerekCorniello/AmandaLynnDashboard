@@ -141,6 +141,7 @@ class GraphData(View):
             return JsonResponse({'error': f'Graph requested `{data["graph"]}` is not available'}, status=404)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ProductList(View):
@@ -154,6 +155,7 @@ class ProductList(View):
             return JsonResponse(products, safe=False)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ProductDelete(View):
@@ -166,6 +168,7 @@ class ProductDelete(View):
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ProductCreate(View):
@@ -197,6 +200,7 @@ class ProductCreate(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ProductUpdate(View):
@@ -229,6 +233,7 @@ class ProductUpdate(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ExpenseList(View):
@@ -242,6 +247,7 @@ class ExpenseList(View):
             return JsonResponse(expenses, safe=False)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ExpenseDelete(View):
@@ -254,6 +260,7 @@ class ExpenseDelete(View):
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ExpenseCreate(View):
@@ -279,6 +286,7 @@ class ExpenseCreate(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class ExpenseUpdate(View):
@@ -304,6 +312,7 @@ class ExpenseUpdate(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class TransactionList(View):
@@ -331,6 +340,7 @@ class TransactionList(View):
             return JsonResponse(transaction_data, safe=False)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class TransactionDelete(View):
@@ -343,6 +353,7 @@ class TransactionDelete(View):
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class TransactionCreate(View):
@@ -382,6 +393,7 @@ class TransactionCreate(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})
 
 
 class TransactionUpdate(View):
@@ -422,3 +434,4 @@ class TransactionUpdate(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             print(e)
+            return JsonResponse({'error': f'Internal Server Error:{e}'})

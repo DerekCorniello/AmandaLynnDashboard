@@ -77,7 +77,7 @@ export default {
             ? error.response.data.error
             : 'An unexpected error occurred'
 
-          if (status === 400 || status === 404) {
+          if (status === 400 || status === 404 || status === 500) {
             this.setError(`Error ${status}: ${errorMessage}`)
           }
 
