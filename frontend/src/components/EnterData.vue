@@ -109,11 +109,11 @@ export default {
         case 'transactions':
           endpoint = 'http://127.0.0.1:8000/api/transactions/create/'
           data = {
-              total: this.newEntry.total,
-              date: this.newEntry.date,
-              type: this.newEntry.type,
-              // Ensure products are split only by commas, creating a clean array
-              products: this.newEntry.products ? this.newEntry.products.split(',').map(name => name.trim()) : []
+            total: this.newEntry.total,
+            date: this.newEntry.date,
+            type: this.newEntry.type,
+            // Ensure products are split only by commas, creating a clean array
+            products: this.newEntry.products ? this.newEntry.products.split(',').map(name => name.trim()) : []
           }
           break
         default:
