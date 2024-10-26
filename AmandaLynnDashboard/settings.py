@@ -109,15 +109,15 @@ LOGGING = {
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-dbname = os.getenv('DATABASE_NAME')
+# Provide a default name if not set
+dbname = os.getenv('DATABASE_NAME', 'dev.sqlite3')
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': dbname if dbname is not None else 'db.sqlite3',
+        'NAME': f"/app/{dbname}",
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators

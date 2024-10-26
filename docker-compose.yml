@@ -20,9 +20,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - sql-data:/app
-      - .:/app
+      - ./DATABASE_NAME:/app/dev.sqlite3 
+      - .:/app  
+    env_file: .env
 
 volumes:
   sql-data:
-    external: true
