@@ -323,16 +323,20 @@ class TransactionList(View):
 
             transaction_data = []
             for transaction in transactions:
-                product_names = transaction.products
-                if product_names.startswith('[') and product_names.endswith(']'):
-                    product_names = product_names[1:-1].replace("'", "")
-
+                # if this is a string, we do not want to use the comma join
+                # or else it will list-ify the string, and list its chars
+                if isinstance(transaction.products, str):
+                    products = transaction.products
+                else:
+                    products = ', '.join(transaction.products)
+                # trims the '' and [] off of the string
+                products = products.replace("'", "")[1:-1]
                 transaction_data.append({
                     'id': transaction.id,
                     'total': transaction.total,
                     'date': transaction.date,
                     'type': transaction.type,
-                    'products': ', '.join([p.strip() for p in product_names.split(',')])
+                    'products': products
                 })
 
             return JsonResponse(transaction_data, safe=False)
@@ -359,10 +363,10 @@ class TransactionCreate(View):
         try:
             data = json.loads(request.body)
 
-            product_names_str = data.get('products', '')
-
-            product_names_list = [product.strip()
-                                  for product in product_names_str]
+            product_names_list = data.get('products', [])
+            if isinstance(product_names_list, str):
+                product_names_list = [p.strip()
+                                      for p in product_names_list.split(',')]
             valid_products = Product.objects.values_list('name', flat=True)
             for product in product_names_list:
                 if product.lower() not in [p.lower() for p in valid_products] and product.lower() != 'unknown':
@@ -374,7 +378,7 @@ class TransactionCreate(View):
                 type=data['type']
             )
 
-            transaction.products = product_names_str
+            transaction.products = product_names_list
             transaction.save()
 
             return JsonResponse({
@@ -382,7 +386,7 @@ class TransactionCreate(View):
                 'total': transaction.total,
                 'date': transaction.date,
                 'type': transaction.type,
-                'products': product_names_str
+                'products': product_names_list
             }, status=201)
 
         except KeyError as e:
@@ -404,10 +408,10 @@ class TransactionUpdate(View):
                 if field in data:
                     setattr(transaction, field, data[field])
 
-            product_names_str = data.get('products', '')
-
-            product_names_list = [product.strip()
-                                  for product in product_names_str.split(',')]
+            product_names_list = data.get('products', [])
+            if isinstance(product_names_list, str):
+                product_names_list = [p.strip()
+                                      for p in product_names_list.split(',')]
 
             valid_products = Product.objects.values_list('name', flat=True)
 
@@ -415,7 +419,7 @@ class TransactionUpdate(View):
                 if product.lower() not in [p.lower() for p in valid_products] and product.lower() != 'unknown':
                     return JsonResponse({'error': f'Product does not exist: {product}'}, status=400)
 
-            transaction.products = product_names_str
+            transaction.products = product_names_list
             transaction.save()
 
             return JsonResponse({
@@ -423,7 +427,7 @@ class TransactionUpdate(View):
                 'total': transaction.total,
                 'date': transaction.date,
                 'type': transaction.type,
-                'products': product_names_str
+                'products': product_names_list
             }, status=205)
 
         except Transaction.DoesNotExist:

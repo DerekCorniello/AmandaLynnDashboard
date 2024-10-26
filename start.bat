@@ -12,8 +12,8 @@ echo Starting Docker Compose services...
 
 docker volume create sql-data
 
-docker build -t frontend-image ./frontend
-docker build -t backend-image .
+docker build --no-cache -t frontend-image ./frontend
+docker build --no-cache -t backend-image .
 
 docker run -d --name frontend-container -p 8081:8080 frontend-image
 docker run -d --name backend-container -v sql-data:/app -p 8000:8000 backend-image
