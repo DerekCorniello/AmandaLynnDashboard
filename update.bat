@@ -1,6 +1,5 @@
-
-echo Checking if Docker is running...
 @echo off
+echo Checking if Docker is running...
 docker info >nul 2>&1
 
 if %errorlevel% neq 0 (
@@ -16,10 +15,11 @@ echo Stopping any running Docker services...
 docker-compose down
 
 echo Building Docker Compose services...
-docker-compose up --build -d
+docker-compose build --no-cache
+
+docker-compose up -d
 
 echo Updating... this may take a while
-
 timeout /t 60 /nobreak >nul
 
 start "" http://localhost:8081
