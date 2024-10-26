@@ -20,7 +20,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./DATABASE_NAME:/app/dev.sqlite3 
+      - ./${DATABASE_NAME}:/app/dev.sqlite3 
       - .:/app  
     env_file: .env
 
