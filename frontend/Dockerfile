@@ -4,5 +4,4 @@ COPY package*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
 EXPOSE 8081
-# CMD ["npm", "run", "serve"]
-CMD ["./node_modules/.bin/vue-cli-service", "serve"]
+CMD ["npm", "run", "serve"]
