@@ -18,7 +18,9 @@ docker-compose down
 echo Building Docker Compose services...
 docker-compose up --build -d
 
-timeout /t 120 /nobreak >nul
+echo Updating... this may take a while
+
+timeout /t 60 /nobreak >nul
 
 start "" http://localhost:8081
 

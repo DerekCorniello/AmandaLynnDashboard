@@ -14,7 +14,7 @@ docker-compose up -d
 
 echo Starting up your app...
 
-timeout /t 60 /nobreak >nul
+timeout /t 30 /nobreak >nul
 start "" http://localhost:8081
 
 echo App Started, press any key to close the app.
