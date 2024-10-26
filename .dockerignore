@@ -1,2 +1,5 @@
-frontend
-start.bat
+./frontend
+./start.bat
+./update.bat
+**/__pycache__
+**/__pycache__/**
