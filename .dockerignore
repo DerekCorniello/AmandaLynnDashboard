@@ -3,3 +3,4 @@
 ./update.bat
 **/__pycache__
 **/__pycache__/**
+*.log
