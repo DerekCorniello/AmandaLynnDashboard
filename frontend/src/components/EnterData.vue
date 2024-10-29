@@ -27,7 +27,22 @@
 
       <div v-if="selectedTable === 'expenses'">
         <label for="name">Name:</label><br>
-        <input type="text" v-model="newEntry.name" required /><br>
+
+        <!-- Typeahead Input for Expense Name -->
+        <input
+          type="text"
+          v-model="newEntry.name"
+          @input="updateSuggestions"
+          @blur="hideSuggestions"
+          @focus="updateSuggestions"
+          placeholder="Enter expense name"
+          required
+        />
+        <ul v-if="showSuggestions" class="suggestions-list">
+          <li v-for="suggestion in filteredSuggestions" :key="suggestion" @mousedown="selectSuggestion(suggestion)">
+            {{ suggestion }}
+          </li>
+        </ul><br>
 
         <label for="date">Date:</label><br>
         <input type="date" v-model="newEntry.date" required /><br>
@@ -40,6 +55,9 @@
       </div>
 
       <div v-if="selectedTable === 'transactions'">
+        <label for="products">Products (Comma-separated Names):</label><br>
+        <input type="text" v-model="newEntry.products" /><br>
+
         <label for="total">Total:</label><br>
         <input type="number" step="0.01" v-model="newEntry.total" required /><br>
 
@@ -48,10 +66,6 @@
 
         <label for="type">Type:</label><br>
         <input type="text" v-model="newEntry.type" required /><br>
-
-        <!-- Handle products separately for transactions -->
-        <label for="products">Products (Comma-separated Names):</label><br>
-        <input type="text" v-model="newEntry.products" /><br>
       </div>
 
       <button type="submit">Add Entry</button>
@@ -75,7 +89,10 @@ export default {
         type: '',
         total: null,
         products: ''
-      }
+      },
+      expenseNames: [], // Store list of names from API here
+      showSuggestions: false, // Controls visibility of suggestions list
+      filteredSuggestions: [] // Holds matching suggestions as user types
     }
   },
   computed: {
@@ -112,7 +129,6 @@ export default {
             total: this.newEntry.total,
             date: this.newEntry.date,
             type: this.newEntry.type,
-            // Ensure products are split only by commas, creating a clean array
             products: this.newEntry.products ? this.newEntry.products.split(',').map(name => name.trim()) : []
           }
           break
@@ -137,7 +153,7 @@ export default {
         stock: null,
         price: null,
         number_sold: null,
-        date: todayDate, // Set today's date
+        date: todayDate,
         type: this.selectedTable === 'expenses' ? 'Fee' : this.selectedTable === 'transactions' ? 'Purchase' : '',
         total: null,
         products: ''
@@ -150,10 +166,58 @@ export default {
       const month = String(today.getMonth() + 1).padStart(2, '0')
       const day = String(today.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
+    },
+
+    async getExpenseNames () {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/expenses/')
+        this.expenseNames = response.data.map(item => item.name)
+      } catch (error) {
+        console.error('Error fetching Expense Names for EnterData: ', error)
+      }
+    },
+
+    updateSuggestions () {
+      const input = this.newEntry.name.toLowerCase()
+      this.filteredSuggestions = this.expenseNames.filter(name => name.toLowerCase().includes(input))
+      this.showSuggestions = this.filteredSuggestions.length > 0
+    },
+
+    selectSuggestion (suggestion) {
+      this.newEntry.name = suggestion
+      this.showSuggestions = false
+    },
+
+    hideSuggestions () {
+      setTimeout(() => {
+        this.showSuggestions = false
+      }, 200)
     }
   },
-  mounted () {
-    this.resetForm() // Initialize the form with today's date
+  async mounted () {
+    this.resetForm()
+    await this.getExpenseNames()
   }
 }
 </script>
+
+<style scoped>
+.suggestions-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ccc;
+  max-height: 100px;
+  overflow-y: auto;
+  background-color: #3a294b;
+}
+
+.suggestions-list li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestions-list li:hover {
+  background-color: #8151a1;
+}
+</style>
