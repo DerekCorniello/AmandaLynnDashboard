@@ -5,6 +5,7 @@ from django.db.models.functions import TruncDate
 from .models import Product, Expense, Transaction
 from collections import defaultdict
 from datetime import datetime
+import logging
 import json
 
 
@@ -135,16 +136,20 @@ class GraphData(View):
                 raise KeyError
             return JsonResponse(res, safe=False)
         except KeyError as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Graph requested `{data["graph"]}` is not available'}, status=404)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
 class ProductList(View):
     def get(self, request):
         try:
+            logger = logging.getLogger(__name__)
+            logger.info("Successful logger")
             products = Product.objects.all()
             allowed_sort_fields = ['name', 'price', 'stock', 'number_sold']
             products = apply_sorting_and_filtering(
@@ -152,7 +157,8 @@ class ProductList(View):
             products = list(products.values())
             return JsonResponse(products, safe=False)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -165,7 +171,8 @@ class ProductDelete(View):
         except Product.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -197,7 +204,8 @@ class ProductCreate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -230,7 +238,8 @@ class ProductUpdate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -244,7 +253,8 @@ class ExpenseList(View):
             expenses = list(expenses.values())
             return JsonResponse(expenses, safe=False)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -257,7 +267,7 @@ class ExpenseDelete(View):
         except Expense.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
-            print(e)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -283,7 +293,8 @@ class ExpenseCreate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -309,7 +320,8 @@ class ExpenseUpdate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -341,7 +353,8 @@ class TransactionList(View):
 
             return JsonResponse(transaction_data, safe=False)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -354,7 +367,8 @@ class TransactionDelete(View):
         except Transaction.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -368,8 +382,10 @@ class TransactionCreate(View):
                 product_names_list = [p.strip()
                                       for p in product_names_list.split(',')]
             valid_products = Product.objects.values_list('name', flat=True)
+            print(valid_products)
             for product in product_names_list:
-                if product.lower() not in [p.lower() for p in valid_products] and product.lower() != 'unknown':
+                if product.lower() not in [p.lower().strip() for p in valid_products] and product.lower() != 'unknown':
+                    print(f'Product does not exist: {product}')
                     return JsonResponse({'error': f'Product does not exist: {product}'}, status=400)
 
             transaction = Transaction.objects.create(
@@ -394,7 +410,8 @@ class TransactionCreate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
 
 
@@ -416,7 +433,7 @@ class TransactionUpdate(View):
             valid_products = Product.objects.values_list('name', flat=True)
 
             for product in product_names_list:
-                if product.lower() not in [p.lower() for p in valid_products] and product.lower() != 'unknown':
+                if product.lower() not in [p.lower().strip() for p in valid_products] and product.lower() != 'unknown':
                     return JsonResponse({'error': f'Product does not exist: {product}'}, status=400)
 
             transaction.products = product_names_list
@@ -435,5 +452,6 @@ class TransactionUpdate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            print(e)
+            logger = logging.getLogger(__name__)
+            logger.info(e)
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
