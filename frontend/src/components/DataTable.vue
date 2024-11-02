@@ -73,7 +73,7 @@
 
             <!-- Actions column -->
             <td>
-              <button v-if="!isEditing && item.id !== currentEditId" @click="deleteItem(item.id)">Delete</button>
+              <button v-if="isEditing && item.id === currentEditId" @click="deleteItem(item.id)">Delete</button>
               <button v-if="!isEditing && item.id !== currentEditId" @click="editItem(item)">Edit</button>
               <button v-if="isEditing && item.id === currentEditId" @click="saveEdit">Save</button>
             </td>
@@ -182,7 +182,12 @@ export default {
     },
     async deleteItem (id) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/${this.selectedTable}/delete/${id}/`)
+        if (confirm("Are you sure you'd like to delete this item?")) {
+          await axios.delete(`http://127.0.0.1:8000/api/${this.selectedTable}/delete/${id}/`)
+          this.isEditing = false
+          this.currentEditId = null
+          this.editItemData = {}
+        }
         this.fetchData()
       } catch (error) {
         console.error('Error deleting item:', error)
