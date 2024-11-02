@@ -20,10 +20,32 @@ docker-compose build --no-cache
 docker-compose up -d
 
 echo Updating... this may take a while
-timeout /t 60 /nobreak >nul
 
-start "" http://localhost:8081
+REM Wait here for both the Django server and the app to respond
 
+set "django_url=http://localhost:8000/api/status/"
+set "app_url=http://localhost:8081"
+set "timeout=5"
+
+:check_django
+powershell -Command "(Invoke-WebRequest -Uri '%django_url%' -UseBasicParsing).StatusCode" >nul 2>&1
+if errorlevel 1 (
+    echo Waiting for Django server to respond...
+    timeout /t %timeout% >nul
+    goto :check_django
+)
+
+echo Django server is up. Checking app...
+
+:check_app
+powershell -Command "(Invoke-WebRequest -Uri '%app_url%' -UseBasicParsing).StatusCode" >nul 2>&1
+if errorlevel 1 (
+    echo Waiting for the app to respond...
+    timeout /t %timeout% >nul
+    goto :check_app
+)
+
+start "" %app_url%
 echo App updated and started! Press any key to close the app.
 pause >nul
 

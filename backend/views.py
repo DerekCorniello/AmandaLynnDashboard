@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.views import View
+from django.db import connection
 from django.db.models import Q, Sum
 from django.db.models.functions import TruncDate
 from .models import Product, Expense, Transaction
@@ -140,6 +141,15 @@ class GraphData(View):
             return JsonResponse({'error': f'Graph requested `{data["graph"]}` is not available: {e}'}, status=404)
         except Exception as e:
             return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
+
+
+class Status(View):
+    def get(self, request):
+        try:
+            connection.ensure_connection()
+            return JsonResponse({"status": "ok"}, status=200)
+        except Exception:
+            return JsonResponse({"status": "error"}, status=500)
 
 
 class ProductList(View):

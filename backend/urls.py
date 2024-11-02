@@ -1,13 +1,17 @@
-
 from django.urls import path
 from .views import (
     ProductList, ProductDelete, ProductCreate, ProductUpdate,
     ExpenseList, ExpenseDelete, ExpenseCreate, ExpenseUpdate,
     TransactionList, TransactionDelete, TransactionCreate, TransactionUpdate,
     GraphData,
+    Status
 )
 
 urlpatterns = [
+
+    # Status URL
+    path('status/', Status.as_view(), name='status'),
+
     # Product URLs
     path('products/', ProductList.as_view(), name='product-list'),
     path('products/create/', ProductCreate.as_view(), name='product-create'),
@@ -32,5 +36,7 @@ urlpatterns = [
          TransactionDelete.as_view(), name='transaction-delete'),
     path('transactions/update/<int:pk>/',
          TransactionUpdate.as_view(), name='transaction-update'),
+
+    # Graph URLS
     path('graphdata/', GraphData.as_view(), name='graph-list')
 ]
