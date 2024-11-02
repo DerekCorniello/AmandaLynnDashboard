@@ -5,13 +5,14 @@ from django.db.models.functions import TruncDate
 from .models import Product, Expense, Transaction
 from collections import defaultdict
 from datetime import datetime
-import logging
 import json
 
 
 def apply_sorting_and_filtering(queryset, request, allowed_sort_fields):
     filters = {key: value for key, value in request.GET.items() if key not in [
-        'sort_by', 'order', 'search']}
+        'sort_by', 'order', 'search', 'show_retired']}
+
+    # Apply filters from the request
     queryset = queryset.filter(**filters)
 
     # Apply search functionality
@@ -136,22 +137,29 @@ class GraphData(View):
                 raise KeyError
             return JsonResponse(res, safe=False)
         except KeyError as e:
-            return JsonResponse({'error': f'Graph requested `{data["graph"]}` is not available'}, status=404)
+            return JsonResponse({'error': f'Graph requested `{data["graph"]}` is not available: {e}'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class ProductList(View):
     def get(self, request):
         try:
+            show_retired = request.GET.get(
+                "show_retired", "false").lower() == "true"
             products = Product.objects.all()
+
+            if not show_retired:
+                products = products.filter(is_retired=False)
+
             allowed_sort_fields = ['name', 'price', 'stock', 'number_sold']
             products = apply_sorting_and_filtering(
                 products, request, allowed_sort_fields)
+
             products = list(products.values())
             return JsonResponse(products, safe=False)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error: {e}'}, status=500)
 
 
 class ProductDelete(View):
@@ -163,7 +171,7 @@ class ProductDelete(View):
         except Product.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class ProductCreate(View):
@@ -194,7 +202,7 @@ class ProductCreate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class ProductUpdate(View):
@@ -209,7 +217,7 @@ class ProductUpdate(View):
             if data['name'].lower() == 'unknown':
                 return JsonResponse({'error': 'Cannot create Unknown Product'}, status=400)
 
-            for field in ['name', 'stock', 'price', 'number_sold']:
+            for field in ['name', 'stock', 'price', 'number_sold', 'is_retired']:
                 if field in data:
                     setattr(product, field, data[field])
 
@@ -226,7 +234,7 @@ class ProductUpdate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class ExpenseList(View):
@@ -239,7 +247,7 @@ class ExpenseList(View):
             expenses = list(expenses.values())
             return JsonResponse(expenses, safe=False)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class ExpenseDelete(View):
@@ -251,7 +259,7 @@ class ExpenseDelete(View):
         except Expense.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class ExpenseCreate(View):
@@ -276,7 +284,7 @@ class ExpenseCreate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class ExpenseUpdate(View):
@@ -301,7 +309,7 @@ class ExpenseUpdate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class TransactionList(View):
@@ -332,7 +340,7 @@ class TransactionList(View):
 
             return JsonResponse(transaction_data, safe=False)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class TransactionDelete(View):
@@ -344,7 +352,7 @@ class TransactionDelete(View):
         except Transaction.DoesNotExist:
             return JsonResponse({'error': 'Not found'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class TransactionCreate(View):
@@ -385,7 +393,7 @@ class TransactionCreate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
 
 
 class TransactionUpdate(View):
@@ -425,4 +433,4 @@ class TransactionUpdate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=506)
+            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)

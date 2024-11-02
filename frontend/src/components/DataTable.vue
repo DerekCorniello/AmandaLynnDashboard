@@ -5,41 +5,51 @@
 
       <!-- Search bar -->
       <label>Search:</label>
-      <input v-model="searchQuery" @input="handleSearch" placeholder="Search..."/><br> <br>
+      <input v-model="searchQuery" @input="handleSearch" placeholder="Search..."/><br><br>
 
       <!-- Sorting controls -->
       <label>Sort by:
         <select v-model="sortField" @change="fetchData">
           <option v-for="header in tableHeaders" :key="header" :value="header">{{ header }}</option>
         </select>
-      </label> <br> <br>
+      </label><br><br>
 
       <label>Order:
         <select v-model="sortOrder" @change="fetchData">
           <option value="asc">Ascending</option>
           <option value="desc">Descending</option>
         </select>
-      </label> <br> <br>
+      </label><br><br>
 
       <!-- Dropdown to select the table type -->
       <select v-model="selectedTable" @change="handleTableChange">
         <option value="products">Products</option>
         <option value="expenses">Expenses</option>
         <option value="transactions">Transactions</option>
-      </select> <br> <br>
+      </select><br><br>
+
+      <!-- Conditional "Show Retired Products" checkbox -->
+      <label v-if="selectedTable === 'products'">
+        <input
+          type="checkbox"
+          v-model="showRetiredFlag"
+          @change="fetchData"
+        />
+        Show Retired Products
+      </label><br><br>
 
       <!-- Table to display the data -->
       <table v-if="data.length">
         <thead>
           <tr>
             <th v-for="(header, index) in tableHeaders" :key="'header-' + index">{{ header }}</th>
+            <th>Retired</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(item, index) in data" :key="'item-' + index">
             <td v-for="(header, index) in tableHeaders" :key="'data-' + index">
-              <!-- Show input fields if editing the item, otherwise show data -->
               <template v-if="isEditing && item.id === currentEditId">
                 <input v-model="editItemData[header]" :type="getInputType(header)" />
               </template>
@@ -47,6 +57,22 @@
                 {{ item[header] || 'N/A' }}
               </template>
             </td>
+            <!-- Retired checkbox column -->
+            <td>
+              <template v-if="isEditing && item.id === currentEditId">
+                <label>
+                  <input
+                    type="checkbox"
+                    v-model="editItemData.is_retired"
+                  />
+                  Status
+                </label>
+              </template>
+              <template v-else>
+                {{ item.is_retired ? 'Retired' : 'Active' }}
+              </template>
+            </td>
+            <!-- Actions column -->
             <td>
               <button v-if="!isEditing && item.id !== currentEditId" @click="deleteItem(item.id)">Delete</button>
               <button v-if="!isEditing && item.id !== currentEditId" @click="editItem(item)">Edit</button>
@@ -59,6 +85,7 @@
     </div>
   </div>
 </template>
+
 <script>
 import axios from 'axios'
 
@@ -66,6 +93,7 @@ export default {
   data () {
     return {
       selectedTable: 'products',
+      showRetiredFlag: false,
       data: [],
       tableHeaders: [],
       tableTitle: 'Product List',
@@ -131,7 +159,8 @@ export default {
           params: {
             search: this.searchQuery,
             sort_by: this.sortField,
-            order: this.sortOrder
+            order: this.sortOrder,
+            show_retired: this.showRetiredFlag
           }
         })
         this.data = response.data.map(item => {
@@ -141,7 +170,8 @@ export default {
           })
           return {
             ...mappedItem,
-            id: item.id // Include id for editing and deletion
+            id: item.id,
+            is_retired: item.is_retired
           }
         })
         this.tableHeaders = headers
@@ -154,7 +184,7 @@ export default {
     async deleteItem (id) {
       try {
         await axios.delete(`http://127.0.0.1:8000/api/${this.selectedTable}/delete/${id}/`)
-        this.fetchData() // Refresh data after deletion
+        this.fetchData()
       } catch (error) {
         console.error('Error deleting item:', error)
       }
@@ -166,6 +196,7 @@ export default {
       this.tableHeaders.forEach(header => {
         this.editItemData[header] = item[header] !== undefined ? item[header] : 'N/A'
       })
+      this.editItemData.is_retired = item.is_retired
     },
     async saveEdit () {
       try {
@@ -173,7 +204,7 @@ export default {
         await axios.put(endpoint, this.editItemData)
         this.isEditing = false
         this.currentEditId = null
-        this.fetchData() // Refresh data after saving
+        this.fetchData()
       } catch (error) {
         console.error('Error updating item:', error)
       }
