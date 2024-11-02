@@ -14,12 +14,16 @@ git pull origin main
 echo Stopping any running Docker services...
 docker-compose down
 
-echo Building Docker Compose services...
+echo Removing old builds...
+docker image prune -f
+docker volume prune -f
+
+echo Updating application, this may take a while...
 docker-compose build --no-cache
 
 docker-compose up -d
 
-echo Updating... this may take a while
+echo Update complete. Starting app...
 
 REM Wait here for both the Django server and the app to respond
 
