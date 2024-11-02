@@ -43,7 +43,7 @@
         <thead>
           <tr>
             <th v-for="(header, index) in tableHeaders" :key="'header-' + index">{{ header }}</th>
-            <th>Retired</th>
+            <th v-if="selectedTable === 'products'">Status</th> <!-- Conditional header for products only -->
             <th>Actions</th>
           </tr>
         </thead>
@@ -57,21 +57,20 @@
                 {{ item[header] || 'N/A' }}
               </template>
             </td>
-            <!-- Retired checkbox column -->
-            <td>
+
+            <!-- Retired checkbox column (visible only for products table) -->
+            <td v-if="selectedTable === 'products'">
               <template v-if="isEditing && item.id === currentEditId">
-                <label>
-                  <input
-                    type="checkbox"
-                    v-model="editItemData.is_retired"
-                  />
-                  Status
-                </label>
+                <input
+                  type="checkbox"
+                  v-model="editItemData.is_retired"
+                />
               </template>
               <template v-else>
                 {{ item.is_retired ? 'Retired' : 'Active' }}
               </template>
             </td>
+
             <!-- Actions column -->
             <td>
               <button v-if="!isEditing && item.id !== currentEditId" @click="deleteItem(item.id)">Delete</button>

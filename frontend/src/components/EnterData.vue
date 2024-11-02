@@ -55,8 +55,25 @@
       </div>
 
       <div v-if="selectedTable === 'transactions'">
-        <label for="products">Products (Comma-separated Names):</label><br>
-        <input type="text" v-model="newEntry.products" /><br>
+        <div v-for="(product, index) in productsList" :key="index" class="product-entry">
+          <div class="product-row">
+            <label style="margin-bottom: 0px;" for="product-select">Product:</label>
+            <select v-model="product.name" @change="updateProductCount(index)" class="product-select">
+              <option v-for="productName in availableProducts" :key="productName" :value="productName">
+                {{ productName }}
+              </option>
+            </select>
+
+            <label style="margin-bottom: 0px;" for="product-count">Count:</label>
+            <input type="number" v-model="product.count" min="1" required class="product-count" />
+
+            <button type="button" @click="removeProductEntry(index)" class="remove-btn">Remove</button>
+          </div>
+        </div><br>
+
+        <div class="product-actions">
+          <button type="button" @click="addProductEntry" class="add-btn">Add Another Product</button>
+        </div><br><br>
 
         <label for="total">Total:</label><br>
         <input type="number" step="0.01" v-model="newEntry.total" required /><br>
@@ -92,7 +109,11 @@ export default {
       },
       expenseNames: [], // Store list of names from API here
       showSuggestions: false, // Controls visibility of suggestions list
-      filteredSuggestions: [] // Holds matching suggestions as user types
+      filteredSuggestions: [], // Holds matching suggestions as user types
+      productsList: [
+        { name: '', count: 1 }
+      ],
+      availableProducts: [] // This will be populated with product names from your API
     }
   },
   computed: {
@@ -125,11 +146,17 @@ export default {
           break
         case 'transactions':
           endpoint = 'http://127.0.0.1:8000/api/transactions/create/'
+          var productsArray = []
+          this.productsList.forEach(product => {
+            for (let i = 0; i < product.count; i++) {
+              productsArray.push(product.name)
+            }
+          })
           data = {
             total: this.newEntry.total,
             date: this.newEntry.date,
             type: this.newEntry.type,
-            products: this.newEntry.products ? this.newEntry.products.split(',').map(name => name.trim()) : []
+            products: productsArray.join(',')
           }
           break
         default:
@@ -142,6 +169,8 @@ export default {
 
         // Emit an event or call a method to update the chart/table data
         this.$emit('data-updated', this.selectedTable) // Emitting an event to parent component
+        await this.getExpenseNames()
+        await this.getAvailableProducts()
       } catch (error) {
         console.error('Error adding entry:', error)
       }
@@ -158,6 +187,8 @@ export default {
         total: null,
         products: ''
       }
+
+      this.productsList = [{ name: '', count: 1 }]
     },
 
     getTodayDate () {
@@ -192,11 +223,29 @@ export default {
       setTimeout(() => {
         this.showSuggestions = false
       }, 200)
+    },
+    addProductEntry () {
+      this.productsList.push({ name: '', count: 1 })
+    },
+    removeProductEntry (index) {
+      this.productsList.splice(index, 1)
+    },
+    updateProductCount (index) {
+      // This can trigger any additional logic if necessary, e.g., updating totals
+    },
+    async getAvailableProducts () {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/products/')
+        this.availableProducts = response.data.map(item => item.name)
+      } catch (error) {
+        console.error('Error fetching available products:', error)
+      }
     }
   },
   async mounted () {
     this.resetForm()
     await this.getExpenseNames()
+    await this.getAvailableProducts()
   }
 }
 </script>
@@ -219,5 +268,30 @@ export default {
 
 .suggestions-list li:hover {
   background-color: #8151a1;
+}
+
+.product-entry {
+  display: flex;
+  justify-content: center;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
+  gap: 2%;
+  width: 80%;
+}
+
+.product-select {
+  width: 30%;
+}
+
+.product-count {
+  width: 10%;
+  text-align: center;
+}
+
+.product-actions {
+  text-align: center;
 }
 </style>
