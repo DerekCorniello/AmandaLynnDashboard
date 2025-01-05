@@ -3,10 +3,10 @@
   <div id="app">
     <ErrorMessage :message="errorMessage" />
     <SuccessMessage :message="successMessage" />
-    <br>
-    <DataTable ref="dataTable" />
-    <br><br><br><br><br>
     <EnterData @data-updated="handleDataUpdated" />
+    <br>
+    <br><br><br><br><br>
+    <DataTable ref="dataTable" />
     <br><br><br><br>
     <!--<MoneyGraph />
     <br><br><br><br>
