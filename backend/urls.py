@@ -4,7 +4,8 @@ from .views import (
     ExpenseList, ExpenseDelete, ExpenseCreate, ExpenseUpdate,
     TransactionList, TransactionDelete, TransactionCreate, TransactionUpdate,
     GraphData,
-    Status
+    Status,
+    ProductComparison
 )
 
 urlpatterns = [
@@ -38,5 +39,8 @@ urlpatterns = [
          TransactionUpdate.as_view(), name='transaction-update'),
 
     # Graph URLS
-    path('graphdata/', GraphData.as_view(), name='graph-list')
+    path('graphdata/', GraphData.as_view(), name='graph-list'),
+
+    # Product Comparison URL
+    path('products/comparison/', ProductComparison.as_view(), name='product-comparison')
 ]

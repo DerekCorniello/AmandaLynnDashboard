@@ -443,4 +443,45 @@ class TransactionUpdate(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': f'Internal Server Error:{e}'}, status=500)
+            return JsonResponse({'error': f'Internal Server Error: {e}'}, status=500)
+
+
+class ProductComparison(View):
+    def get(self, request):
+        try:
+            products = Product.objects.filter(is_retired=False)
+
+            product_details = []
+            stock_data = []
+            number_sold_data = []
+
+            for product in products:
+                product_details.append({
+                    'name': product.name,
+                    'price': float(product.price)
+                })
+                stock_data.append(product.stock)
+                number_sold_data.append(product.number_sold)
+
+            return JsonResponse({
+                'labels': [p['name'] for p in product_details],
+                'datasets': [
+                    {
+                        'label': 'Stock',
+                        'data': stock_data,
+                        'backgroundColor': 'rgba(54, 162, 235, 0.7)',
+                        'borderColor': 'rgba(54, 162, 235, 1)',
+                        'borderWidth': 1
+                    },
+                    {
+                        'label': 'Number Sold',
+                        'data': number_sold_data,
+                        'backgroundColor': 'rgba(255, 99, 132, 0.7)',
+                        'borderColor': 'rgba(255, 99, 132, 1)',
+                        'borderWidth': 1
+                    }
+                ],
+                'product_details': product_details
+            })
+        except Exception as e:
+            return JsonResponse({'error': f'Internal Server Error: {e}'}, status=500)

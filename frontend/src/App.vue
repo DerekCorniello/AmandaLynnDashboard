@@ -8,10 +8,8 @@
     <br><br><br><br><br>
     <DataTable ref="dataTable" />
     <br><br><br><br>
-    <!--<MoneyGraph />
+    <ProductComparisonGraph />
     <br><br><br><br>
-    <ProductGraph />
-    <br><br><br><br> -->
   </div>
   <br><br><br><br>
 </template>
@@ -22,8 +20,7 @@ import DataTable from './components/DataTable.vue'
 import EnterData from './components/EnterData.vue'
 import ErrorMessage from './components/ErrorMessage.vue'
 import SuccessMessage from './components/SuccessMessage.vue'
-// import MoneyGraph from './components/MoneyGraph.vue'
-// import ProductGraph from './components/ProductGraph.vue'
+import ProductComparisonGraph from './components/ProductComparisonGraph.vue'
 
 export default {
   name: 'App',
@@ -31,9 +28,8 @@ export default {
     DataTable,
     EnterData,
     ErrorMessage,
-    SuccessMessage // ,
-    // MoneyGraph,
-    // ProductGraph
+    SuccessMessage,
+    ProductComparisonGraph
   },
   data () {
     return {
