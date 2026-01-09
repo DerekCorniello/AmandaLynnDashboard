@@ -48,7 +48,9 @@ const dataLabelPlugin = {
   id: 'dataLabels',
   afterDatasetsDraw: (chart) => {
     const { ctx, data } = chart
-    if (chart.getDatasetMeta(0).type === 'pie' || chart.getDatasetMeta(0).type === 'doughnut') {
+    const chartType = chart.getDatasetMeta(0).type
+
+    if (chartType === 'pie' || chartType === 'doughnut') {
       ctx.save()
       const datasets = data.datasets
 
@@ -75,20 +77,6 @@ const dataLabelPlugin = {
         })
       })
 
-      ctx.restore()
-    } else {
-      ctx.save()
-      data.datasets.forEach((dataset, datasetIndex) => {
-        const meta = chart.getDatasetMeta(datasetIndex)
-        meta.data.forEach((bar, index) => {
-          const value = dataset.data[index]
-          ctx.font = 'bold 11px sans-serif'
-          ctx.fillStyle = '#fff'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'bottom'
-          ctx.fillText(value, bar.x, bar.y - 5)
-        })
-      })
       ctx.restore()
     }
   }

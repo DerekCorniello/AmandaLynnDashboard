@@ -8,9 +8,11 @@
     <br><br><br><br><br>
     <DataTable ref="dataTable" />
     <br><br><br><br>
-    <ProductComparisonGraph />
-    <br><br><br><br>
-  </div>
+     <ProductComparisonGraph />
+     <br><br><br><br>
+     <TimeSeriesGraph />
+     <br><br><br><br>
+   </div>
   <br><br><br><br>
 </template>
 
@@ -21,6 +23,7 @@ import EnterData from './components/EnterData.vue'
 import ErrorMessage from './components/ErrorMessage.vue'
 import SuccessMessage from './components/SuccessMessage.vue'
 import ProductComparisonGraph from './components/ProductComparisonGraph.vue'
+import TimeSeriesGraph from './components/TimeSeriesGraph.vue'
 
 export default {
   name: 'App',
@@ -29,7 +32,8 @@ export default {
     EnterData,
     ErrorMessage,
     SuccessMessage,
-    ProductComparisonGraph
+    ProductComparisonGraph,
+    TimeSeriesGraph
   },
   data () {
     return {

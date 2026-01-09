@@ -37,6 +37,7 @@ def apply_sorting_and_filtering(queryset, request, allowed_sort_fields):
 
 
 class GraphData(View):
+
     def _get_money_data(self, timescale):
         today = datetime.now()
         match timescale:
@@ -126,13 +127,148 @@ class GraphData(View):
     def _get_product_data(self, timescale):
         return
 
-    def get(self, request):
+    def _get_timeseries_data(self, request_data):
+        try:
+            years_str = request_data.get('years', str(datetime.now().year))
+            metrics_str = request_data.get('metrics', 'revenue,profit')
+            products_str = request_data.get('products', 'all')
+
+            years = [int(y.strip()) for y in years_str.split(',')]
+            metrics = [m.strip().lower() for m in metrics_str.split(',')]
+            products = [p.strip() for p in products_str.split(',')] if products_str.lower() != 'all' else None
+
+            all_datasets = []
+            all_labels = []
+
+            colors = ['#42A5F5', '#FF6384', '#4BC0C0', '#FFCE56', '#36A2EB', '#9966FF', '#FF9F40']
+
+            year_colors = {}
+            for i, year in enumerate(years):
+                year_colors[year] = colors[i % len(colors)]
+
+            for year in years:
+                year_start = datetime(year, 1, 1)
+                year_end = datetime(year, 12, 31)
+
+                month_labels = [f'{year}-{str(m).zfill(2)}' for m in range(1, 13)]
+
+                revenue_by_month = defaultdict(float)
+                loss_by_month = defaultdict(float)
+
+                transactions = Transaction.objects.filter(date__range=(year_start, year_end))
+                expenses = Expense.objects.filter(date__range=(year_start, year_end))
+
+                for transaction in transactions:
+                    month = transaction.date.month
+                    revenue_by_month[month] += float(transaction.total)
+
+                for expense in expenses:
+                    month = expense.date.month
+                    loss_by_month[month] += float(expense.price)
+
+                if 'revenue' in metrics:
+                    all_datasets.append({
+                        'label': f'Revenue {year}',
+                        'data': [revenue_by_month[m] for m in range(1, 13)],
+                        'borderColor': year_colors[year],
+                        'backgroundColor': 'transparent',
+                        'borderWidth': 2,
+                        'pointRadius': 4,
+                        'fill': False
+                    })
+
+                if 'loss' in metrics:
+                    all_datasets.append({
+                        'label': f'Loss {year}',
+                        'data': [loss_by_month[m] for m in range(1, 13)],
+                        'borderColor': year_colors[year],
+                        'backgroundColor': 'transparent',
+                        'borderWidth': 2,
+                        'pointRadius': 4,
+                        'fill': False
+                    })
+
+                if 'profit' in metrics:
+                    all_datasets.append({
+                        'label': f'Profit {year}',
+                        'data': [revenue_by_month[m] - loss_by_month[m] for m in range(1, 13)],
+                        'borderColor': year_colors[year],
+                        'backgroundColor': 'transparent',
+                        'borderWidth': 2,
+                        'pointRadius': 4,
+                        'fill': False
+                    })
+
+                all_labels.extend(month_labels)
+
+            if 'product_sales' in metrics:
+                selected_products = products
+                if not selected_products:
+                    all_products = Product.objects.filter(is_retired=False)
+                    selected_products = [p.name for p in all_products]
+
+                for year in years:
+                    year_start = datetime(year, 1, 1)
+                    year_end = datetime(year, 12, 31)
+
+                    product_sales = {}
+                    for product in selected_products:
+                        product_sales[product] = defaultdict(int)
+
+                    transactions = Transaction.objects.filter(date__range=(year_start, year_end))
+
+                    for transaction in transactions:
+                        if isinstance(transaction.products, str):
+                            products_list = [p.strip().strip("[]'") for p in transaction.products.split(',')]
+                        else:
+                            products_list = list(transaction.products)
+
+                        for product_name in products_list:
+                            if product_name in product_sales:
+                                product_sales[product_name][transaction.date.month] += 1
+
+                    month_labels = [f'{year}-{str(m).zfill(2)}' for m in range(1, 13)]
+
+                    for i, product_name in enumerate(selected_products):
+                        all_labels.extend(month_labels)
+                        color = colors[(i + len(years)) % len(colors)]
+                        all_datasets.append({
+                            'label': f'{product_name} Sales {year}',
+                            'data': [product_sales[product_name][m] for m in range(1, 13)],
+                            'borderColor': color,
+                            'backgroundColor': 'transparent',
+                            'borderWidth': 2,
+                            'pointRadius': 4,
+                            'fill': False
+                        })
+
+            if not all_datasets:
+                return {
+                    'labels': [],
+                    'datasets': []
+                }
+
+            return {
+                'labels': list(dict.fromkeys(all_labels)),
+                'datasets': all_datasets
+            }
+
+        except Exception as e:
+            print(f'Error in _get_timeseries_data: {e}')
+            return {
+                'labels': [],
+                'datasets': []
+            }
+
+    def post(self, request):
         try:
             data = json.loads(request.body)
             if data['graph'] == 'money':
                 res = self._get_money_data(data['timescale'])
             elif data['graph'] == 'product':
                 res = self._get_product_data(data['timescale'])
+            elif data['graph'] == 'timeseries':
+                res = self._get_timeseries_data(data)
             else:
                 res = None
                 raise KeyError
