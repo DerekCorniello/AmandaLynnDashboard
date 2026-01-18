@@ -99,6 +99,43 @@ export default {
       chartType: 'bar'
     }
   },
+  methods: {
+    toTitleCase (str) {
+      if (!str) return ''
+      if (typeof str !== 'string') return str
+      // Replace underscores with spaces first
+      str = str.replace(/_/g, ' ')
+      // Then apply title case
+      return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+    },
+    async fetchData () {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/products/comparison/')
+        const data = response.data
+
+        this.productDetails = data.product_details || []
+
+        this.chartData = {
+          labels: data.labels.map((name, index) =>
+            `${name} ($${this.productDetails[index]?.price.toFixed(2) || '0.00'})`
+          ),
+          datasets: data.datasets.map((dataset) => ({
+            ...dataset,
+            borderWidth: 2,
+            hoverBackgroundColor: dataset.backgroundColor.replace('0.7', '0.9'),
+            hoverBorderColor: dataset.borderColor
+          }))
+        }
+      } catch (err) {
+        this.error = 'Failed to load product comparison data'
+        console.error('Error fetching product comparison:', err)
+      } finally {
+        this.loading = false
+      }
+    }
+  },
   computed: {
     hasData () {
       return this.chartData && this.chartData.labels && this.chartData.labels.length > 0
@@ -192,7 +229,7 @@ export default {
                 const product = this.productDetails[productIndex]
                 const value = context.raw
                 if (product) {
-                  return `${product.name} ($${product.price.toFixed(2)}): ${value}`
+                  return `${this.toTitleCase(product.name)} ($${product.price.toFixed(2)}): ${value}`
                 }
                 return value
               }
@@ -248,9 +285,10 @@ export default {
                   callback: (value, index) => {
                     const product = this.productDetails[index]
                     if (product) {
-                      return product.name.length > 10
-                        ? product.name.substring(0, 10) + '...'
-                        : product.name
+                      const name = this.toTitleCase(product.name)
+                      return name.length > 10
+                        ? name.substring(0, 10) + '...'
+                        : name
                     }
                     return ''
                   }
@@ -275,35 +313,6 @@ export default {
   },
   async mounted () {
     await this.fetchData()
-  },
-  methods: {
-    async fetchData () {
-      this.loading = true
-      this.error = null
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/api/products/comparison/')
-        const data = response.data
-
-        this.productDetails = data.product_details || []
-
-        this.chartData = {
-          labels: data.labels.map((name, index) =>
-            `${name} ($${this.productDetails[index]?.price.toFixed(2) || '0.00'})`
-          ),
-          datasets: data.datasets.map((dataset) => ({
-            ...dataset,
-            borderWidth: 2,
-            hoverBackgroundColor: dataset.backgroundColor.replace('0.7', '0.9'),
-            hoverBorderColor: dataset.borderColor
-          }))
-        }
-      } catch (err) {
-        this.error = 'Failed to load product comparison data'
-        console.error('Error fetching product comparison:', err)
-      } finally {
-        this.loading = false
-      }
-    }
   }
 }
 </script>

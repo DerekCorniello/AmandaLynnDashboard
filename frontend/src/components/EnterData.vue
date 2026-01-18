@@ -38,11 +38,11 @@
           placeholder="Enter expense name"
           required
         />
-        <ul v-if="showSuggestions" class="suggestions-list">
-          <li v-for="suggestion in filteredSuggestions" :key="suggestion" @mousedown="selectSuggestion(suggestion)">
-            {{ suggestion }}
-          </li>
-        </ul><br>
+         <ul v-if="showSuggestions" class="suggestions-list">
+           <li v-for="suggestion in filteredSuggestions" :key="suggestion" @mousedown="selectSuggestion(suggestion)">
+             {{ toTitleCase(suggestion) }}
+           </li>
+         </ul><br>
 
         <label for="date">Date:</label><br>
         <input type="date" v-model="newEntry.date" required /><br>
@@ -58,11 +58,11 @@
         <div v-for="(product, index) in productsList" :key="index" class="product-entry">
           <div class="product-row">
             <label style="margin-bottom: 0px;" for="product-select">Product:</label>
-            <select v-model="product.name" @change="updateProductCount(index)" class="product-select">
-              <option v-for="productName in availableProducts" :key="productName" :value="productName">
-                {{ productName }}
-              </option>
-            </select>
+             <select v-model="product.name" @change="updateProductCount(index)" class="product-select">
+               <option v-for="productName in availableProducts" :key="productName" :value="productName">
+                 {{ toTitleCase(productName) }}
+               </option>
+             </select>
 
             <label style="margin-bottom: 0px;" for="product-count">Count:</label>
             <input type="number" v-model="product.count" min="1" required class="product-count" />
@@ -92,8 +92,10 @@
 
 <script>
 import axios from 'axios'
+import titleCaseMixin from '../mixins/titleCaseMixin'
 
 export default {
+  mixins: [titleCaseMixin],
   data () {
     return {
       selectedTable: 'products',
@@ -131,6 +133,14 @@ export default {
     }
   },
   methods: {
+    toTitleCase (str) {
+      if (!str) return ''
+      if (typeof str !== 'string') return str
+      // Replace underscores with spaces first
+      str = str.replace(/_/g, ' ')
+      // Then apply title case
+      return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+    },
     async submitForm () {
       let endpoint = ''
       let data = {}
@@ -144,9 +154,9 @@ export default {
           endpoint = 'http://127.0.0.1:8000/api/expenses/create/'
           data = { ...this.newEntry }
           break
-        case 'transactions':
+        case 'transactions': {
           endpoint = 'http://127.0.0.1:8000/api/transactions/create/'
-          var productsArray = []
+          const productsArray = []
           this.productsList.forEach(product => {
             for (let i = 0; i < product.count; i++) {
               productsArray.push(product.name)
@@ -159,6 +169,7 @@ export default {
             products: productsArray.join(',')
           }
           break
+        }
         default:
           return
       }
@@ -230,7 +241,7 @@ export default {
     removeProductEntry (index) {
       this.productsList.splice(index, 1)
     },
-    updateProductCount (index) {
+    updateProductCount () {
       // This can trigger any additional logic if necessary, e.g., updating totals
     },
     async getAvailableProducts () {

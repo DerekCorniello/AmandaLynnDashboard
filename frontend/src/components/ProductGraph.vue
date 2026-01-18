@@ -2,10 +2,10 @@
   <div>
     <h2>Products Sold Over Time</h2>
 
-    <label>Select Products:</label>
-    <select v-model="selectedProducts" @change="updateChart" multiple>
-      <option v-for="product in products" :key="product.id" :value="product.id">{{ product.name }}</option>
-    </select>
+     <label>Select Products:</label>
+     <select v-model="selectedProducts" @change="updateChart" multiple>
+       <option v-for="product in products" :key="product.id" :value="product.id">{{ toTitleCase(product.name) }}</option>
+     </select>
 
     <label>Time Scale:</label>
     <select v-model="selectedTimeScale" @change="updateChart">
@@ -24,10 +24,12 @@
 <script>
 import { Line } from 'vue-chartjs'
 import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement } from 'chart.js'
+import titleCaseMixin from '../mixins/titleCaseMixin'
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement)
 
 export default {
+  mixins: [titleCaseMixin],
   components: {
     LineChart: Line
   },
@@ -54,6 +56,14 @@ export default {
     }
   },
   methods: {
+    toTitleCase (str) {
+      if (!str) return ''
+      if (typeof str !== 'string') return str
+      // Replace underscores with spaces first
+      str = str.replace(/_/g, ' ')
+      // Then apply title case
+      return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+    },
     updateChart () {
       // Fetch and update the chart data based on selected products and time scale
     }

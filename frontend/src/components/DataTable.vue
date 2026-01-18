@@ -10,7 +10,7 @@
       <!-- Sorting controls -->
       <label>Sort by:
         <select v-model="sortField" @change="fetchData">
-          <option v-for="header in tableHeaders" :key="header" :value="header">{{ header }}</option>
+          <option v-for="header in tableHeaders" :key="header" :value="header">{{ toTitleCase(header) }}</option>
         </select>
       </label><br><br>
 
@@ -42,21 +42,21 @@
       <table v-if="data.length">
         <thead>
           <tr>
-            <th v-for="(header, index) in tableHeaders" :key="'header-' + index">{{ header }}</th>
+            <th v-for="(header, index) in tableHeaders" :key="'header-' + index">{{ toTitleCase(header) }}</th>
             <th v-if="selectedTable === 'products'">Status</th> <!-- Conditional header for products only -->
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(item, index) in data" :key="'item-' + index">
-            <td v-for="(header, index) in tableHeaders" :key="'data-' + index">
-              <template v-if="isEditing && item.id === currentEditId">
-                <input v-model="editItemData[header]" :type="getInputType(header)" />
-              </template>
-              <template v-else>
-                {{ item[header] || 'N/A' }}
-              </template>
-            </td>
+             <td v-for="(header, index) in tableHeaders" :key="'data-' + index">
+               <template v-if="isEditing && item.id === currentEditId">
+                 <input v-model="editItemData[header]" :type="getInputType(header)" />
+               </template>
+               <template v-else>
+                 {{ header === 'name' ? toTitleCase(item[header]) : (item[header] || 'N/A') }}
+               </template>
+             </td>
 
             <!-- Retired checkbox column (visible only for products table) -->
             <td v-if="selectedTable === 'products'">
@@ -87,8 +87,10 @@
 
 <script>
 import axios from 'axios'
+import titleCaseMixin from '../mixins/titleCaseMixin'
 
 export default {
+  mixins: [titleCaseMixin],
   data () {
     return {
       selectedTable: 'products',
@@ -105,6 +107,14 @@ export default {
     }
   },
   methods: {
+    toTitleCase (str) {
+      if (!str) return ''
+      if (typeof str !== 'string') return str
+      // Replace underscores with spaces first
+      str = str.replace(/_/g, ' ')
+      // Then apply title case
+      return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+    },
     handleTableChange () {
       this.isEditing = false
       this.updateSortField()

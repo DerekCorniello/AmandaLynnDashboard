@@ -73,7 +73,7 @@
               v-model="selectedProducts"
               @change="fetchData"
             >
-            {{ product.name }}
+            {{ toTitleCase(product.name) }}
           </label>
         </div>
       </div>
@@ -197,6 +197,14 @@ export default {
     await this.fetchData()
   },
   methods: {
+    toTitleCase (str) {
+      if (!str) return ''
+      if (typeof str !== 'string') return str
+      // Replace underscores with spaces first
+      str = str.replace(/_/g, ' ')
+      // Then apply title case
+      return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())
+    },
     async fetchProducts () {
       try {
         const response = await axios.get('http://127.0.0.1:8000/api/products/?show_retired=false')
