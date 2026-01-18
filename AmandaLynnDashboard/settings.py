@@ -28,7 +28,10 @@ SECRET_KEY = os.getenv('PRIVATE_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# NOTE: This allows all hosts for local development convenience.
+# In production, this should be restricted to specific domains/IPs.
+# Consider implementing authentication if exposing to broader networks.
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -145,7 +148,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Timezone set to EST for local use
+TIME_ZONE = 'America/New_York'
 
 USE_I18N = True
 
@@ -156,6 +160,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Serve Vue frontend static files
+import os
+FRONTEND_DIST = os.path.join(BASE_DIR, 'frontend', 'dist')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'frontend', 'dist'),
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

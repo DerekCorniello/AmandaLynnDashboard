@@ -5,13 +5,15 @@ from .views import (
     TransactionList, TransactionDelete, TransactionCreate, TransactionUpdate,
     GraphData,
     Status,
-    ProductComparison
+    ProductComparison,
+    SaveData,
+    HomeView
 )
 
 urlpatterns = [
 
-    # Status URL
-    path('status/', Status.as_view(), name='status'),
+    # Home/Frontend URL
+    path('', HomeView.as_view(), name='home'),
 
     # Product URLs
     path('products/', ProductList.as_view(), name='product-list'),
@@ -42,5 +44,8 @@ urlpatterns = [
     path('graphdata/', GraphData.as_view(), name='graph-list'),
 
     # Product Comparison URL
-    path('products/comparison/', ProductComparison.as_view(), name='product-comparison')
+    path('products/comparison/', ProductComparison.as_view(), name='product-comparison'),
+
+    # Save Data URL
+    path('save/', SaveData.as_view(), name='save-data')
 ]

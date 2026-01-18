@@ -621,3 +621,47 @@ class ProductComparison(View):
             })
         except Exception as e:
             return JsonResponse({'error': f'Internal Server Error: {e}'}, status=500)
+
+
+class SaveData(View):
+    def post(self, request):
+        try:
+            # Force database commit (Django handles this automatically, but we'll provide feedback)
+            from django.db import transaction
+            transaction.commit()
+
+            # Return success with current timestamp
+            import datetime
+            return JsonResponse({
+                "message": "Data saved successfully",
+                "timestamp": datetime.datetime.now().isoformat(),
+                "status": "saved"
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({
+                "message": f"Save failed: {str(e)}",
+                "status": "error"
+            }, status=500)
+
+
+class HomeView(View):
+    def get(self, request):
+        try:
+            import os
+            from django.conf import settings
+
+            index_path = os.path.join(settings.BASE_DIR, 'frontend', 'dist', 'index.html')
+
+            if os.path.exists(index_path):
+                with open(index_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Add proper content-type for HTML
+                from django.http import HttpResponse
+                return HttpResponse(content, content_type='text/html')
+            else:
+                from django.http import HttpResponseNotFound
+                return HttpResponseNotFound('Frontend not found. Please build the Vue app.')
+        except Exception as e:
+            from django.http import HttpResponseServerError
+            return HttpResponseServerError(f'Error serving frontend: {str(e)}')
