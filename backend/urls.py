@@ -7,7 +7,8 @@ from .views import (
     Status,
     ProductComparison,
     SaveData,
-    HomeView
+    HomeView,
+    ExportData
 )
 
 urlpatterns = [
@@ -47,5 +48,8 @@ urlpatterns = [
     path('products/comparison/', ProductComparison.as_view(), name='product-comparison'),
 
     # Save Data URL
-    path('save/', SaveData.as_view(), name='save-data')
+    path('save/', SaveData.as_view(), name='save-data'),
+
+    # Export Data URL
+    path('export/', ExportData.as_view(), name='export-data')
 ]

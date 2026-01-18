@@ -665,3 +665,283 @@ class HomeView(View):
         except Exception as e:
             from django.http import HttpResponseServerError
             return HttpResponseServerError(f'Error serving frontend: {str(e)}')
+
+
+class ExportData(View):
+    def get(self, request):
+        try:
+            data_type = request.GET.get('type', 'all')
+            format_type = request.GET.get('format', 'txt')
+
+            data = {}
+            title = ''
+
+            if data_type in ['products', 'all']:
+                products = list(Product.objects.all().values())
+                data['products'] = products
+                title = 'Products'
+
+            if data_type in ['expenses', 'all']:
+                expenses = list(Expense.objects.all().values())
+                data['expenses'] = expenses
+                title = 'Expenses'
+
+            if data_type in ['transactions', 'all']:
+                transactions = list(Transaction.objects.all().values())
+                data['transactions'] = transactions
+                title = 'Transactions'
+
+            # Generate filename with timestamp
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'amanda_lynn_{data_type}_{timestamp}'
+
+            if format_type == 'pdf':
+                return self._generate_pdf(data, filename, data_type)
+            elif format_type == 'docx':
+                return self._generate_docx(data, filename, data_type)
+            else:
+                return self._generate_txt(data, filename, data_type)
+
+        except Exception as e:
+            return JsonResponse({'error': f'Export failed: {str(e)}'}, status=500)
+
+    def _generate_txt(self, data, filename, data_type):
+        from datetime import datetime
+        content = []
+        content.append('=' * 60)
+        content.append('AMANDA LYNN DATA EXPORT')
+        content.append(f'Export Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        content.append(f'Data Type: {data_type.upper()}')
+        content.append('=' * 60)
+        content.append('')
+
+        if 'products' in data and data['products']:
+            content.append('-' * 40)
+            content.append('PRODUCTS')
+            content.append('-' * 40)
+            for i, p in enumerate(data['products'], 1):
+                content.append(f'{i}. {p.get("name", "N/A")}')
+                content.append(f'   Stock: {p.get("stock", 0)}')
+                content.append(f'   Price: ${p.get("price", 0)}')
+                content.append(f'   Sold: {p.get("number_sold", 0)}')
+                content.append(f'   Status: {"Active" if not p.get("is_retired") else "Retired"}')
+                content.append('')
+
+        if 'expenses' in data and data['expenses']:
+            content.append('')
+            content.append('-' * 40)
+            content.append('EXPENSES')
+            content.append('-' * 40)
+            for i, e in enumerate(data['expenses'], 1):
+                content.append(f'{i}. {e.get("name", "N/A")}')
+                content.append(f'   Date: {e.get("date", "N/A")}')
+                content.append(f'   Type: {e.get("type", "N/A")}')
+                content.append(f'   Amount: ${e.get("price", 0)}')
+                content.append('')
+
+        if 'transactions' in data and data['transactions']:
+            content.append('')
+            content.append('-' * 40)
+            content.append('TRANSACTIONS')
+            content.append('-' * 40)
+            for i, t in enumerate(data['transactions'], 1):
+                content.append(f'{i}. Transaction #{t.get("id", "N/A")}')
+                content.append(f'   Date: {t.get("date", "N/A")}')
+                content.append(f'   Type: {t.get("type", "N/A")}')
+                content.append(f'   Total: ${t.get("total", 0)}')
+                content.append(f'   Products: {t.get("products", "N/A")}')
+                content.append('')
+
+        content.append('')
+        content.append('=' * 60)
+        content.append('END OF EXPORT')
+        content.append('=' * 60)
+
+        from django.http import HttpResponse
+        response = HttpResponse('\n'.join(content), content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.txt"'
+        return response
+
+    def _generate_pdf(self, data, filename, data_type):
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib import colors
+        from io import BytesIO
+        from datetime import datetime
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        # Title
+        title_style = styles['Title']
+        elements.append(Paragraph('AMANDA LYNN DATA EXPORT', title_style))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f'Export Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', styles['Normal']))
+        elements.append(Paragraph(f'Data Type: {data_type.upper()}', styles['Normal']))
+        elements.append(Spacer(1, 20))
+
+        if 'products' in data and data['products']:
+            elements.append(Paragraph('PRODUCTS', styles['Heading2']))
+            product_data = [['Name', 'Stock', 'Price', 'Sold', 'Status']]
+            for p in data['products']:
+                product_data.append([
+                    p.get('name', 'N/A'),
+                    str(p.get('stock', 0)),
+                    f'${p.get("price", 0)}',
+                    str(p.get('number_sold', 0)),
+                    'Active' if not p.get('is_retired') else 'Retired'
+                ])
+            t = Table(product_data)
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(t)
+            elements.append(Spacer(1, 20))
+
+        if 'expenses' in data and data['expenses']:
+            elements.append(Paragraph('EXPENSES', styles['Heading2']))
+            expense_data = [['Name', 'Date', 'Type', 'Amount']]
+            for e in data['expenses']:
+                expense_data.append([
+                    e.get('name', 'N/A'),
+                    str(e.get('date', 'N/A')),
+                    e.get('type', 'N/A'),
+                    f'${e.get("price", 0)}'
+                ])
+            t = Table(expense_data)
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(t)
+            elements.append(Spacer(1, 20))
+
+        if 'transactions' in data and data['transactions']:
+            elements.append(Paragraph('TRANSACTIONS', styles['Heading2']))
+            trans_data = [['ID', 'Date', 'Type', 'Total', 'Products']]
+            for t in data['transactions']:
+                trans_data.append([
+                    str(t.get('id', 'N/A')),
+                    str(t.get('date', 'N/A')),
+                    t.get('type', 'N/A'),
+                    f'${t.get("total", 0)}',
+                    t.get('products', 'N/A')[:30] + '...' if len(str(t.get('products', ''))) > 30 else t.get('products', 'N/A')
+                ])
+            t = Table(trans_data)
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(t)
+
+        doc.build(elements)
+
+        from django.http import HttpResponse
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.pdf"'
+        return response
+
+    def _generate_docx(self, data, filename, data_type):
+        from docx import Document
+        from docx.shared import Inches, Pt
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+        doc = Document()
+
+        # Title
+        title = doc.add_heading('AMANDA LYNN DATA EXPORT', 0)
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        doc.add_paragraph(f'Export Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        doc.add_paragraph(f'Data Type: {data_type.upper()}')
+        doc.add_paragraph('')
+
+        if 'products' in data and data['products']:
+            doc.add_heading('PRODUCTS', level=1)
+            table = doc.add_table(rows=1, cols=5)
+            table.style = 'Table Grid'
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = 'Name'
+            hdr_cells[1].text = 'Stock'
+            hdr_cells[2].text = 'Price'
+            hdr_cells[3].text = 'Sold'
+            hdr_cells[4].text = 'Status'
+
+            for p in data['products']:
+                row_cells = table.add_row().cells
+                row_cells[0].text = p.get('name', 'N/A')
+                row_cells[1].text = str(p.get('stock', 0))
+                row_cells[2].text = f'${p.get("price", 0)}'
+                row_cells[3].text = str(p.get('number_sold', 0))
+                row_cells[4].text = 'Active' if not p.get('is_retired') else 'Retired'
+
+            doc.add_paragraph('')
+
+        if 'expenses' in data and data['expenses']:
+            doc.add_heading('EXPENSES', level=1)
+            table = doc.add_table(rows=1, cols=4)
+            table.style = 'Table Grid'
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = 'Name'
+            hdr_cells[1].text = 'Date'
+            hdr_cells[2].text = 'Type'
+            hdr_cells[3].text = 'Amount'
+
+            for e in data['expenses']:
+                row_cells = table.add_row().cells
+                row_cells[0].text = e.get('name', 'N/A')
+                row_cells[1].text = str(e.get('date', 'N/A'))
+                row_cells[2].text = e.get('type', 'N/A')
+                row_cells[3].text = f'${e.get("price", 0)}'
+
+            doc.add_paragraph('')
+
+        if 'transactions' in data and data['transactions']:
+            doc.add_heading('TRANSACTIONS', level=1)
+            table = doc.add_table(rows=1, cols=5)
+            table.style = 'Table Grid'
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = 'ID'
+            hdr_cells[1].text = 'Date'
+            hdr_cells[2].text = 'Type'
+            hdr_cells[3].text = 'Total'
+            hdr_cells[4].text = 'Products'
+
+            for t in data['transactions']:
+                row_cells = table.add_row().cells
+                row_cells[0].text = str(t.get('id', 'N/A'))
+                row_cells[1].text = str(t.get('date', 'N/A'))
+                row_cells[2].text = t.get('type', 'N/A')
+                row_cells[3].text = f'${t.get("total", 0)}'
+                row_cells[4].text = t.get('products', 'N/A')[:30] + '...' if len(str(t.get('products', ''))) > 30 else t.get('products', 'N/A')
+
+        # Save to buffer
+        from io import BytesIO
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+
+        from django.http import HttpResponse
+        response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.docx"'
+        return response

@@ -31,7 +31,9 @@
      <br><br><br><br>
      <TimeSeriesGraph />
      <br><br><br><br>
-  </div>
+     <ExportPanel />
+     <br><br><br><br>
+   </div>
   <br><br><br><br>
 </template>
 
@@ -43,6 +45,7 @@ import ErrorMessage from './components/ErrorMessage.vue'
 import SuccessMessage from './components/SuccessMessage.vue'
 import ProductComparisonGraph from './components/ProductComparisonGraph.vue'
 import TimeSeriesGraph from './components/TimeSeriesGraph.vue'
+import ExportPanel from './components/ExportPanel.vue'
 
 export default {
   name: 'App',
@@ -52,7 +55,8 @@ export default {
     ErrorMessage,
     SuccessMessage,
     ProductComparisonGraph,
-    TimeSeriesGraph
+    TimeSeriesGraph,
+    ExportPanel
   },
   data () {
     return {
